@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Home Page
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/login.css" />
+{% endblock %}
+
+{% block content %}
+<div class="message">
+    {% if msg %}
+    <div class="alert alert-danger" role="alert">
+        {{msg}}
+    </div>
+    {% endif %}
+</div>
+<form action="/unlock?id={{id}}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary" id="login-btn">Decrypt the note</button>
+</form>
+<a href="/">
+    <button class="btn btn-success">Home</button>
+</a>
+{% endblock %}

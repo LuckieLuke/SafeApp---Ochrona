@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Home Page
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/index.css" />
+{% endblock %}
+
+{% block content %}
+<h1>Title: {{note.title}}</h1>
+<h2>Author: {{note.author}}</h2>
+<p>{{note.content}}</p>
+<br />
+<div class="buttons">
+    <a href="/">
+        <button class="btn btn-success">
+            Home
+        </button>
+    </a>
+    <a href="/notes">
+        <button class="btn btn-success">
+            Notes
+        </button>
+    </a>
+</div>
+{% endblock %}

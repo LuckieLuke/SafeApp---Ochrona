@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Add note
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/addnote.css" />
+{% endblock %}
+
+{% block content %}
+<form action="/addnote" method="POST" class="form-note">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" aria-describedby="titleHelp"
+            pattern="[a-zA-Z0-9?!.,:'@#$^&*() ]+" name="title" required>
+        <div id="titleHelp" class="form-text">What is the note about?</div>
+    </div>
+    <div class="mb-3">
+        <label for="content" class="form-label">Content of the note</label>
+        <input type="text" class="form-control" name="content" id="content">
+    </div>
+    <select class="form-select" name="visibility">
+        <option value="private" selected>Private</option>
+        <option value="protected">Protected</option>
+        <option value="shared">Shared</option>
+        <option value="public">Public</option>
+    </select>
+    <div class="mb-3">
+        <div class="input-group">
+            <input type="text" id="shared-username" name="username" class="form-control" disabled>
+            <input type="password" id="cripted-password" name="password" class="form-control" disabled>
+        </div>
+        <div id="infoHelp" class="form-text">Write username of a user
+            or a secret password if you chose "shared" or "protected", respectively. If fields gets greener, your note
+            will be shared. Otherwise, the user doesn't exist.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="scripts/passwordNote.js"></script>
+{% endblock %}

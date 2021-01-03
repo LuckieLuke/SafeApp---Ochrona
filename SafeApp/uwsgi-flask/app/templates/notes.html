@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Add note
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/notes.css" />
+{% endblock %}
+
+{% block content %}
+<section class="notes-table">
+    {% if not notes %}
+    <p>YOU HAVE NO NOTES</p>
+    {% else %}
+    <h3>Your notes:</h3>
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Author</th>
+                <th>Type</th>
+                <th>Shared with</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="notes-body">
+            {% for note in notes %}
+            <tr>
+                <td>{{note.title}}</td>
+                <td class="centered-col">{{note.status}}</td>
+                <td class="centered-col">{{note.author}}</td>
+                <td class="centered-col">{{note.note_type}}</td>
+                <td class="centered-col">
+                    {% if note.status == 'shared' %}
+                    {{note.colab}}
+                    {% else %}
+                    ---
+                    {% endif %}
+                </td>
+                {% if note.note_type == 'note' %}
+                <td><a href="/show?id={{note.id}}"><button class="btn btn-primary">Open</button></a></td>
+                {% else %}
+                <td><a href="/showfile?id={{note.id}}"><button class="btn btn-primary">Open</button></a></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    <div class="buttons">
+        <a href="/">
+            <button class="btn btn-success">
+                Home
+            </button>
+        </a>
+        <a href="/addnote">
+            <button class="btn btn-success">
+                Add new note
+            </button>
+        </a>
+        <a href="/addfile">
+            <button class="btn btn-success">
+                Add new file
+            </button>
+        </a>
+        <a href="/logout">
+            <button class="btn btn-danger">
+                Sign out
+            </button>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="scripts/notes.js"></script>
+{% endblock %}

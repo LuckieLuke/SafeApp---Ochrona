@@ -1,0 +1,7 @@
+flask
+uwsgi
+flask-jwt-extended 
+PyJWT<2.0,>=1.6.4
+Flask-SQLAlchemy
+pycryptodome
+Flask-WTF

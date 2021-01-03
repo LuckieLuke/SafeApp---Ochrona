@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Create account
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/register.css" />
+{% endblock %}
+
+{% block content %}
+<div class="message">
+    {% if msg %}
+    <div class="alert alert-danger" role="alert">
+        {{msg}}
+    </div>
+    {% endif %}
+</div>
+<form action="/register" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" id="username" aria-describedby="usernameHelp"
+            pattern="[a-zA-Z0-9]{5,20}" required>
+        <div id="usernameHelp" class="form-text">Letters or numbers, between 5 and 20 characters.</div>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input type="text" name="email" class="form-control" id="email" pattern="[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+"
+            required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="password" aria-describedby="passwordHelp"
+            pattern="[a-zA-Z0-9!@#$%^&*()]{12,}" required>
+        <div id="passwordHelp" class="form-text">Letters, numbers or special characters (!@#$%^&*()), more than 12
+            characters.</div>
+    </div>
+    <div class="mb-3">
+        <label for="repeatPassword" class="form-label">Repeat password</label>
+        <input type="password" name="repeatPassword" class="form-control" id="repeatPassword"
+            aria-describedby="repeatPasswordHelp" pattern="[a-zA-Z0-9!@#$%^&*()]{12,}" required>
+        <div id="repeatPasswordHelp" class="form-text">Please, make it the same as above.</div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="register-btn" disabled>Register</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="scripts/script.js"></script>
+{% endblock %}

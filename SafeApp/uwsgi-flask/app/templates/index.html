@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Home Page
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/index.css" />
+{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul class=flashes>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<div class="message">
+    {% if hacked %}
+    <div class="alert alert-danger" role="alert">
+        I THINK YOU SHOULDN'T BE HERE HMMMMMM?
+        <br /><br />
+        YOU HACKER
+    </div>
+    {% endif %}
+</div>
+{% endwith %}
+<h1>Welcome to the safest app ever!</h1>
+<h2>It's so safe that you don't even have to try and break it :)</h2>
+<h4>really</h4>
+<h6>don't</h6>
+<section class="buttons">
+    {% if not logged %}
+    <a href="/register">
+        <button class="btn btn-success">
+            Sign up
+        </button>
+    </a>
+    <a href="/login">
+        <button class="btn btn-success">
+            Sign in
+        </button>
+    </a>
+    {% else %}
+    <a href="/notes">
+        <button class="btn btn-success">
+            Notes
+        </button>
+    </a>
+    <a href="/addnote">
+        <button class="btn btn-success">
+            Add new note
+        </button>
+    </a>
+    <a href="/addfile">
+        <button class="btn btn-success">
+            Add new file
+        </button>
+    </a>
+    <a href="/changepassword">
+        <button class="btn btn-warning">
+            Change password
+        </button>
+    </a>
+    <a href="/logout">
+        <button class="btn btn-danger">
+            Sign out
+        </button>
+    </a>
+    {% endif %}
+</section>
+{% endblock %}

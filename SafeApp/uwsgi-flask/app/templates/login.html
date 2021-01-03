@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="styles/index.css" />
+<link rel="stylesheet" href="styles/login.css" />
+{% endblock %}
+
+{% block content %}
+<div class="message">
+    {% if msg %}
+    <div class="alert alert-danger" role="alert">
+        {{msg}}
+    </div>
+    {% endif %}
+</div>
+<form action="/login" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" id="username" aria-describedby="usernameHelp"
+            pattern="[a-zA-Z0-9]{5,20}" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary" id="login-btn">Sign in</button>
+</form>
+<a href="/register">
+    <button class="btn btn-success">Sign up</button>
+</a>
+
+<button class="btn btn-danger" onclick="forgotPassword()">Forgot password</button>
+{% endblock %}
+
+{% block scripts %}
+<script src="scripts/login.js"></script>
+{% endblock %}

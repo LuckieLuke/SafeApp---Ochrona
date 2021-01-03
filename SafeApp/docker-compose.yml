@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  nginx:
+    build:
+      context: ./nginx-ssl
+    depends_on:
+      - flask
+    ports:
+      - "443:443"
+
+  flask:
+    build:
+      context: ./uwsgi-flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uwsgi-flask/app:/var/www/app
+    environment:
+      JWT_SECRET: $JWT_SECRET
+      SECRET_KEY: $SECRET_KEY
+      DEFAULT_CSP: $DEFAULT_CSP

@@ -1,0 +1,15 @@
+.buttons {
+    padding: 5%;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:focus {
+    outline: none;
+}
+
+button:focus {
+    outline: none;
+}
