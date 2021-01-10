@@ -16,19 +16,23 @@ from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__, static_url_path='')
+db = SQLAlchemy(app)
+csrf = CSRFProtect(app)
+
+JWT_SECRET = os.environ.get('JWT_SECRET')
+DEFAULT_CSP = os.environ.get('DEFAULT_CSP')
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'app/files/'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+app.config['SESSION_COOKIE_SECURE'] = True
 
 app.permanent_session_lifetime = timedelta(minutes=10)
-app.config['SESSION_COOKIE_SECURE'] = True
-db = SQLAlchemy(app)
-csrf = CSRFProtect(app)
+
 log = app.logger
-JWT_SECRET = os.environ.get('JWT_SECRET')
-DEFAULT_CSP = os.environ.get('DEFAULT_CSP')
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 
 class User(db.Model):
@@ -122,7 +126,7 @@ def home():
         is_new = request.args.get('new')
         if is_new == 'True':
             flash(
-                f'New host ({request.remote_addr}) has logged in!'
+                f'New host ({request.access_route[-1]}) has logged in!'
             )
     resp = make_response(render_template(
         'index.html', logged=isLogged, hacked=hacked))
@@ -176,8 +180,10 @@ def login(msg=None):
             update_blacklist(request, False)
             return make_logger_cookie(request)
 
-        hashed = hashlib.sha512(
-            (password + user.salt).encode('utf-8')).hexdigest()
+        for i in range(749):
+            prev = password + user.salt if i == 0 else hashed
+            hashed = hashlib.sha512(
+                (prev).encode('utf-8')).hexdigest()
 
         if user.password == hashed:
             session['user'] = username
@@ -189,8 +195,8 @@ def login(msg=None):
             for i in range(len(hosts)):
                 hosts[i] = str(hosts[i])
 
-            if request.remote_addr not in hosts:
-                host = Host(ip=request.remote_addr, user_id=user.id)
+            if request.access_route[-1] not in hosts:
+                host = Host(ip=request.access_route[-1], user_id=user.id)
                 db.session.add(host)
                 db.session.commit()
                 resp = make_response(redirect(url_for('home', new=True)))
@@ -254,7 +260,10 @@ def register(msg=None):
 
         password = form['password']
         salt = uuid.uuid4().hex[0:16]
-        hashed = hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
+        for i in range(749):
+            prev = password + salt if i == 0 else hashed
+            hashed = hashlib.sha512(
+                (prev).encode('utf-8')).hexdigest()
         key = uuid.uuid4().hex[0:16]
 
         user = User(username=form['username'], email=form['email'],
@@ -270,7 +279,7 @@ def register(msg=None):
         session['uid'] = user.id
         session.permanent = True
 
-        host = Host(ip=request.remote_addr, user_id=user.id)
+        host = Host(ip=request.access_route[-1], user_id=user.id)
         saved_hosts = Host.query.filter_by(user_id=user.id).all()
         if host not in saved_hosts:
             db.session.add(host)
@@ -340,11 +349,14 @@ def add_note():
                     )
             elif form['visibility'] == 'protected':
                 user = User.query.filter_by(username=session['user']).first()
-                aes = AESCipher(user.key)
                 password = form['password']
                 salt = user.salt
-                hashed = hashlib.sha512(
-                    (password + salt).encode('utf-8')).hexdigest()
+                for i in range(749):
+                    prev = password + user.salt if i == 0 else hashed
+                    hashed = hashlib.sha512(
+                        (prev).encode('utf-8')).hexdigest()
+
+                aes = AESCipher(hashed)
                 note = Note(
                     title=form['title'],
                     content=aes.encrypt(form['content']),
@@ -404,6 +416,12 @@ def show():
         id = int(id)
         note = Note.query.filter_by(id=id).first()
 
+        if not note:
+            resp = make_response(redirect(url_for('notes')))
+            resp.headers['Server'] = 'cheater'
+            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+            return resp
+
         if not (str(note.author) == session['user'] or
                 (str(note.status) == 'shared' and
                  str(note.colab) == session['user']) or
@@ -437,6 +455,12 @@ def show_file():
     id = request.args['id']
     id = int(id)
     note = Note.query.filter_by(id=id).first()
+
+    if not note:
+        resp = make_response(redirect(url_for('notes')))
+        resp.headers['Server'] = 'cheater'
+        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+        return resp
 
     if not str(note.author) == session['user']:
         resp = make_response(redirect(url_for('home')))
@@ -474,8 +498,10 @@ def show_protected(msg=None):
         user = User.query.filter_by(username=session['user']).first()
         password = request.form['password']
         salt = user.salt
-        hashed = hashlib.sha512(
-            (password + salt).encode('utf-8')).hexdigest()
+        for i in range(749):
+            prev = password + salt if i == 0 else hashed
+            hashed = hashlib.sha512(
+                (prev).encode('utf-8')).hexdigest()
 
         while start + timedelta(seconds=1) > datetime.now():
             pass
@@ -489,7 +515,7 @@ def show_protected(msg=None):
             return resp
         else:
             user = User.query.filter_by(username=session['user']).first()
-            aes = AESCipher(str(user.key))
+            aes = AESCipher(hashed)
             note.content = aes.decrypt(note.content)
             resp = make_response(render_template(
                 'note.html', note=note
@@ -519,8 +545,10 @@ def change_password(msg=None):
         oldpassword = form['oldpassword']
         salt = user.salt
         newpassword = form['newpassword']
-        hashed = hashlib.sha512(
-            (oldpassword + salt).encode('utf-8')).hexdigest()
+        for i in range(749):
+            prev = oldpassword + salt if i == 0 else hashed
+            hashed = hashlib.sha512(
+                (prev).encode('utf-8')).hexdigest()
         if hashed != user.password or newpassword != form['repassword']:
             resp = make_response(render_template(
                 'changepassword.html', msg='Wrong password'))
@@ -533,8 +561,10 @@ def change_password(msg=None):
             resp.headers['/Server'] = 'cheater'
             resp.headers['Content-Security-Policy'] = DEFAULT_CSP
             return resp
-        user.password = hashlib.sha512(
-            (newpassword + salt).encode('utf-8')).hexdigest()
+        for i in range(749):
+            prev = newpassword + salt if i == 0 else hashed
+            hashed = hashlib.sha512((prev).encode('utf-8')).hexdigest()
+        user.password = hashed
         db.session.commit()
         resp = make_response(redirect(url_for('home')))
         resp.headers['/Server'] = 'cheater'
@@ -638,7 +668,7 @@ def make_logger_cookie(request):
     if not request.cookies.get('logger'):
         exp = datetime.now() + timedelta(seconds=300)
         logger = encode(
-            {'ip': request.remote_addr, 'exp': exp, 'tries': 1},
+            {'ip': request.access_route[-1], 'exp': exp, 'tries': 1},
             JWT_SECRET, 'HS256'
         )
         resp.set_cookie('logger', logger,
@@ -654,7 +684,7 @@ def make_logger_cookie(request):
 
 
 def is_blocked(request):
-    ip = request.remote_addr
+    ip = request.access_route[-1]
     host = BlackList.query.filter_by(ip=ip).first()
     if host and host.blocked_until:
         if str(host.blocked_until) > str(datetime.now()):
@@ -663,7 +693,7 @@ def is_blocked(request):
 
 
 def update_blacklist(request, isLogged):
-    ip = request.remote_addr
+    ip = request.access_route[-1]
     host = BlackList.query.filter_by(ip=ip).first()
     if host is None:
         host = BlackList(ip, 0)
