@@ -180,7 +180,7 @@ def login(msg=None):
             update_blacklist(request, False)
             return make_logger_cookie(request)
 
-        for i in range(749):
+        for i in range(749385):
             prev = password + user.salt if i == 0 else hashed
             hashed = hashlib.sha512(
                 (prev).encode('utf-8')).hexdigest()
@@ -260,7 +260,7 @@ def register(msg=None):
 
         password = form['password']
         salt = uuid.uuid4().hex[0:16]
-        for i in range(749):
+        for i in range(749385):
             prev = password + salt if i == 0 else hashed
             hashed = hashlib.sha512(
                 (prev).encode('utf-8')).hexdigest()
@@ -351,7 +351,7 @@ def add_note():
                 user = User.query.filter_by(username=session['user']).first()
                 password = form['password']
                 salt = user.salt
-                for i in range(749):
+                for i in range(749385):
                     prev = password + user.salt if i == 0 else hashed
                     hashed = hashlib.sha512(
                         (prev).encode('utf-8')).hexdigest()
@@ -498,7 +498,7 @@ def show_protected(msg=None):
         user = User.query.filter_by(username=session['user']).first()
         password = request.form['password']
         salt = user.salt
-        for i in range(749):
+        for i in range(749385):
             prev = password + salt if i == 0 else hashed
             hashed = hashlib.sha512(
                 (prev).encode('utf-8')).hexdigest()
@@ -545,7 +545,7 @@ def change_password(msg=None):
         oldpassword = form['oldpassword']
         salt = user.salt
         newpassword = form['newpassword']
-        for i in range(749):
+        for i in range(749385):
             prev = oldpassword + salt if i == 0 else hashed
             hashed = hashlib.sha512(
                 (prev).encode('utf-8')).hexdigest()
@@ -561,7 +561,7 @@ def change_password(msg=None):
             resp.headers['/Server'] = 'cheater'
             resp.headers['Content-Security-Policy'] = DEFAULT_CSP
             return resp
-        for i in range(749):
+        for i in range(749385):
             prev = newpassword + salt if i == 0 else hashed
             hashed = hashlib.sha512((prev).encode('utf-8')).hexdigest()
         user.password = hashed
