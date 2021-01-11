@@ -171,7 +171,6 @@ def login(msg=None):
             update_blacklist(request, False)
             return make_logger_cookie(request)
 
-        password = form['password']
         user = User.query.filter_by(username=username).first()
 
         if not user:
@@ -179,6 +178,14 @@ def login(msg=None):
                 pass
             update_blacklist(request, False)
             return make_logger_cookie(request)
+
+        password = form['password']
+
+        if not password:
+            while start + timedelta(seconds=1) > datetime.now():
+                pass
+            update_blacklist(request, False)
+            resp = make_logger_cookie(request)
 
         for i in range(749385):
             prev = password + user.salt if i == 0 else hashed
@@ -233,17 +240,18 @@ def register(msg=None):
         resp = make_response(redirect(url_for('home')))
         resp.headers['Server'] = 'cheater'
         resp.headers['Content-Security-Policy'] = DEFAULT_CSP
-
         return resp
+
     if request.method == 'GET':
         resp = make_response(render_template('register.html', msg=msg))
         resp.headers['Server'] = 'cheater'
         resp.headers['Content-Security-Policy'] = DEFAULT_CSP
-
         return resp
+
     elif request.method == 'POST':
         start = datetime.now()
         form = request.form
+
         if entropy(form['password']) < 3:
             resp = make_response(render_template(
                 'register.html', msg='Password too weak! Try again with \
@@ -251,7 +259,8 @@ def register(msg=None):
             resp.headers['Server'] = 'cheater'
             resp.headers['Content-Security-Policy'] = DEFAULT_CSP
             return resp
-        elif form['password'] != form['repeatPassword']:
+
+        elif form['password'] != form['repeatPassword'] or not form['password'] or not form['email'] or not form['username']:
             resp = make_response(render_template(
                 'register.html', msg="Password's need to be the same!"))
             resp.headers['Server'] = 'cheater'
@@ -350,7 +359,12 @@ def add_note():
             elif form['visibility'] == 'protected':
                 user = User.query.filter_by(username=session['user']).first()
                 password = form['password']
-                salt = user.salt
+
+                if not password:
+                    resp = make_response(redirect(url_for('notes')))
+                    resp.headers['Server'] = 'cheater'
+                    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
                 for i in range(749385):
                     prev = password + user.salt if i == 0 else hashed
                     hashed = hashlib.sha512(
@@ -411,9 +425,14 @@ def show():
         resp.headers['Content-Security-Policy'] = DEFAULT_CSP
         return resp
 
-    id = request.args['id']
     if request.method == 'GET':
-        id = int(id)
+        try:
+            id = int(request.args['id'])
+        except:
+            resp = make_response(redirect(url_for('notes')))
+            resp.headers['Server'] = 'cheater'
+            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+            return resp
         note = Note.query.filter_by(id=id).first()
 
         if not note:
@@ -452,8 +471,13 @@ def show_file():
         resp.headers['Content-Security-Policy'] = DEFAULT_CSP
         return resp
 
-    id = request.args['id']
-    id = int(id)
+    try:
+        id = int(request.args['id'])
+    except:
+        resp = make_response(redirect(url_for('notes')))
+        resp.headers['Server'] = 'cheater'
+        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+        return resp
     note = Note.query.filter_by(id=id).first()
 
     if not note:
@@ -769,3 +793,17 @@ def entropy(d):
     for el in c:
         entropy -= stats[el] * log2(stats[el])
     return entropy
+
+###################################
+
+
+@ app.errorhandler(400)
+@ app.errorhandler(401)
+@ app.errorhandler(403)
+@ app.errorhandler(404)
+@ app.errorhandler(500)
+def bad_request(error):
+    resp = make_response({'msg': 'Sorry, something went wrong'})
+    resp.headers['Server'] = 'cheater'
+    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+    return resp
