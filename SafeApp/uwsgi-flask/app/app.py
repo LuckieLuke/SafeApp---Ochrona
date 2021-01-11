@@ -802,8 +802,9 @@ def entropy(d):
 @ app.errorhandler(403)
 @ app.errorhandler(404)
 @ app.errorhandler(500)
+@ app.errorhandler(502)
 def bad_request(error):
-    resp = make_response({'msg': 'Sorry, something went wrong'})
+    resp = make_response({'msg': error.description}, error.code)
     resp.headers['Server'] = 'cheater'
     resp.headers['Content-Security-Policy'] = DEFAULT_CSP
     return resp
