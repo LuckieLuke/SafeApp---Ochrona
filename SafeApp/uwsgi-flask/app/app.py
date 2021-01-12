@@ -115,6 +115,13 @@ class BlackList(db.Model):
         self.blocked_until = blocked_until
 
 
+@app.after_request
+def add_headers(resp):
+    resp.headers['Server'] = 'cheater'
+    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+    return resp
+
+
 @ app.route('/')
 def home():
     isLogged = False
@@ -134,8 +141,7 @@ def home():
         session.clear()
         resp.set_cookie('access_token', 'INVALID', max_age=-
                         1, httponly=True, secure=True)
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
     return resp
 
 
@@ -146,8 +152,7 @@ def login(msg=None):
 
     if request.method == 'GET':
         resp = make_response(render_template('login.html', msg=msg))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     elif request.method == 'POST':
         start = datetime.now()
@@ -157,8 +162,6 @@ def login(msg=None):
                 'login.html',
                 msg='Logging limit reached! Wait a minute to try again.'
             ))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
             return resp
 
@@ -207,11 +210,9 @@ def login(msg=None):
                 db.session.add(host)
                 db.session.commit()
                 resp = make_response(redirect(url_for('home', new=True)))
-                resp.headers['Server'] = 'cheater'
+
             else:
                 resp = make_response(redirect(url_for('home')))
-                resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
             exp = datetime.now() + timedelta(seconds=600)
             access_token = encode(
@@ -238,14 +239,12 @@ def register(msg=None):
     token = request.cookies.get('access_token')
     if 'user' in session or valid(token):
         resp = make_response(redirect(url_for('home')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     if request.method == 'GET':
         resp = make_response(render_template('register.html', msg=msg))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     elif request.method == 'POST':
@@ -256,15 +255,13 @@ def register(msg=None):
             resp = make_response(render_template(
                 'register.html', msg='Password too weak! Try again with \
                 something stronger.'))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
         elif form['password'] != form['repeatPassword'] or not form['password'] or not form['email'] or not form['username']:
             resp = make_response(render_template(
                 'register.html', msg="Password's need to be the same!"))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
         password = form['password']
@@ -294,12 +291,9 @@ def register(msg=None):
             db.session.add(host)
             db.session.commit()
             resp = make_response(redirect(url_for('home', new=True)))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         else:
             resp = make_response(redirect(url_for('home')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
         exp = datetime.now() + timedelta(seconds=600)
         access_token = encode(
@@ -315,8 +309,7 @@ def logout():
     session.clear()
     resp = make_response(redirect(url_for('home')))
     resp.set_cookie('access_token', 'INVALID', max_age=-1)
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
     return resp
 
 
@@ -325,14 +318,12 @@ def add_note():
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     else:
         if request.method == 'GET':
             resp = make_response(render_template('addnote.html'))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
         elif request.method == 'POST':
             form = request.form
@@ -362,8 +353,6 @@ def add_note():
 
                 if not password:
                     resp = make_response(redirect(url_for('notes')))
-                    resp.headers['Server'] = 'cheater'
-                    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
                 for i in range(749385):
                     prev = password + user.salt if i == 0 else hashed
@@ -391,8 +380,7 @@ def add_note():
             db.session.commit()
 
             resp = make_response(redirect(url_for('notes')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
 
@@ -401,8 +389,7 @@ def notes():
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     my_notes = set(Note.query.filter_by(user_id=session['uid']).all())
     pub_notes = set(Note.query.filter_by(status='public').all())
@@ -411,8 +398,7 @@ def notes():
     notes = list(my_notes | pub_notes | shared_notes)
 
     resp = make_response(render_template('notes.html', notes=notes))
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
     return resp
 
 
@@ -421,8 +407,7 @@ def show():
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     if request.method == 'GET':
@@ -430,15 +415,13 @@ def show():
             id = int(request.args['id'])
         except:
             resp = make_response(redirect(url_for('notes')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
         note = Note.query.filter_by(id=id).first()
 
         if not note:
             resp = make_response(redirect(url_for('notes')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
         if not (str(note.author) == session['user'] or
@@ -446,18 +429,15 @@ def show():
                  str(note.colab) == session['user']) or
                 str(note.status) == 'public'):
             resp = make_response(redirect(url_for('home')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
         if str(note.status) != 'protected':
             resp = make_response(render_template('note.html', note=note))
             resp.headers['Location'] = '/show' + '?id=' + str(id)
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         else:
             resp = make_response(redirect(url_for('show_protected', id=id)))
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
     return resp
 
@@ -467,36 +447,30 @@ def show_file():
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     try:
         id = int(request.args['id'])
     except:
         resp = make_response(redirect(url_for('notes')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     note = Note.query.filter_by(id=id).first()
 
     if not note:
         resp = make_response(redirect(url_for('notes')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     if not str(note.author) == session['user']:
         resp = make_response(redirect(url_for('home')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
     resp = make_response(send_from_directory(
         app.config['UPLOAD_FOLDER'], note.filename, as_attachment=False
     ))
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
     return resp
 
@@ -507,14 +481,12 @@ def show_protected(msg=None):
     id = int(request.args['id']) or 0
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     if request.method == 'GET':
         resp = make_response(render_template(
             'unlock.html', id=id))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     elif request.method == 'POST':
         start = datetime.now()
@@ -534,8 +506,7 @@ def show_protected(msg=None):
             resp = make_response(render_template(
                 'unlock.html', msg='Wrong password!', id=id))
             resp.headers['Location'] = '/unlock?id=' + str(id)
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
         else:
             user = User.query.filter_by(username=session['user']).first()
@@ -544,8 +515,7 @@ def show_protected(msg=None):
             resp = make_response(render_template(
                 'note.html', note=note
             ))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
 
@@ -554,13 +524,12 @@ def change_password(msg=None):
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     if request.method == 'GET':
         resp = make_response(render_template('changepassword.html', msg=msg))
         resp.headers['/Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     elif request.method == 'POST':
         form = request.form
@@ -577,13 +546,13 @@ def change_password(msg=None):
             resp = make_response(render_template(
                 'changepassword.html', msg='Wrong password'))
             resp.headers['/Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
         if entropy(newpassword) < 3:
             resp = make_response(render_template(
                 'changepassword.html', msg='Your password is too weak!'))
             resp.headers['/Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
         for i in range(749385):
             prev = newpassword + salt if i == 0 else hashed
@@ -592,7 +561,7 @@ def change_password(msg=None):
         db.session.commit()
         resp = make_response(redirect(url_for('home')))
         resp.headers['/Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
 
 
@@ -601,13 +570,11 @@ def add_file():
     token = request.cookies.get('access_token')
     if 'user' not in session or not valid(token):
         resp = make_response(redirect(url_for('logout')))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     if request.method == 'GET':
         resp = make_response(render_template('addfile.html'))
-        resp.headers['Server'] = 'cheater'
-        resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
         return resp
     elif request.method == 'POST':
         if 'file' not in request.files:
@@ -633,8 +600,7 @@ def add_file():
             db.session.commit()
 
             resp = make_response(redirect(url_for('notes')))
-            resp.headers['Server'] = 'cheater'
-            resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
             return resp
 
 
@@ -645,8 +611,7 @@ def check_login(uname):
         resp = make_response('Go ahead', 200)
     else:
         resp = make_response('Login taken!', 404)
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
     return resp
 
 
@@ -657,8 +622,7 @@ def get_email(uname):
         resp = make_response({'user': 'No user'}, 404)
     else:
         resp = make_response({'email': user.email}, 202)
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
+
     return resp
 
 
@@ -686,8 +650,6 @@ def allowed_file(filename):
 def make_logger_cookie(request):
     resp = make_response(render_template(
         'login.html', msg='Invalid data! Try again.'))
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
 
     if not request.cookies.get('logger'):
         exp = datetime.now() + timedelta(seconds=300)
@@ -797,14 +759,14 @@ def entropy(d):
 ###################################
 
 
-@ app.errorhandler(400)
-@ app.errorhandler(401)
-@ app.errorhandler(403)
-@ app.errorhandler(404)
-@ app.errorhandler(500)
-@ app.errorhandler(502)
-def bad_request(error):
-    resp = make_response({'msg': error.description}, error.code)
-    resp.headers['Server'] = 'cheater'
-    resp.headers['Content-Security-Policy'] = DEFAULT_CSP
-    return resp
+# @ app.errorhandler(400)
+# @ app.errorhandler(401)
+# @ app.errorhandler(403)
+# @ app.errorhandler(404)
+# @ app.errorhandler(500)
+# @ app.errorhandler(502)
+# def bad_request(error):
+#     resp = make_response({'msg': error.description}, error.code)
+#
+#
+#     return resp
