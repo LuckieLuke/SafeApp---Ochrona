@@ -755,18 +755,3 @@ def entropy(d):
     for el in c:
         entropy -= stats[el] * log2(stats[el])
     return entropy
-
-###################################
-
-
-# @ app.errorhandler(400)
-# @ app.errorhandler(401)
-# @ app.errorhandler(403)
-# @ app.errorhandler(404)
-# @ app.errorhandler(500)
-# @ app.errorhandler(502)
-# def bad_request(error):
-#     resp = make_response({'msg': error.description}, error.code)
-#
-#
-#     return resp
